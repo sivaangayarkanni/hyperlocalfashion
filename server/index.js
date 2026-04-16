@@ -272,9 +272,60 @@ app.use('/api/fraud', require('./routes/fraud'));
 app.use('/api/pricing', require('./routes/pricing'));
 app.use('/api/escrow', require('./routes/escrow'));
 
-// Health check
+// Health check endpoints
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'ReWear API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'ReWear API is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'ReWear API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get('/api/health/db', (req, res) => {
+  db.get('SELECT 1', (err) => {
+    if (err) {
+      return res.status(500).json({ 
+        status: 'error', 
+        message: 'Database connection failed',
+        error: err.message 
+      });
+    }
+    res.json({ 
+      status: 'ok', 
+      message: 'Database connection successful',
+      timestamp: new Date().toISOString()
+    });
+  });
+});
+
+app.get('/api/health/ai', (req, res) => {
+  const providers = {
+    openai: !!process.env.OPENAI_API_KEY,
+    anthropic: !!process.env.ANTHROPIC_API_KEY,
+    gemini: !!process.env.GOOGLE_API_KEY,
+    cohere: !!process.env.COHERE_API_KEY
+  };
+  
+  const enabledProviders = Object.entries(providers)
+    .filter(([_, enabled]) => enabled)
+    .map(([name, _]) => name);
+
+  res.json({ 
+    status: enabledProviders.length > 0 ? 'ok' : 'warning',
+    message: `${enabledProviders.length} AI providers configured`,
+    providers: enabledProviders,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // 404 handler

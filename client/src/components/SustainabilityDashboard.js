@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SustainabilityDashboard.css';
+import io from 'socket.io-client';
 
 const SustainabilityDashboard = ({ userId }) => {
   const [sustainabilityData, setSustainabilityData] = useState(null);
@@ -7,50 +8,133 @@ const SustainabilityDashboard = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize Socket.io for real-time updates
+    socketRef.current = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
+
+    socketRef.current.on('sustainability-update', (data) => {
+      if (data.userId === parseInt(userId)) {
+        setSustainabilityData(prev => ({
+          ...prev,
+          ...data
+        }));
+      }
+    });
+
+    socketRef.current.on('leaderboard-update', (data) => {
+      setLeaderboard(data);
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [userId]);
 
   useEffect(() => {
     fetchSustainabilityData();
     fetchLeaderboard();
+    
+    // Refresh data every 30 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchSustainabilityData();
+      fetchLeaderboard();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [userId]);
 
   const fetchSustainabilityData = async () => {
     try {
+      setError(null);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`/api/sustainability-advanced/user/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch sustainability data');
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to fetch sustainability data');
       }
 
       const result = await response.json();
-      setSustainabilityData(result.data);
+      
+      if (result.success && result.data) {
+        setSustainabilityData(result.data);
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
       console.error('Error fetching sustainability data:', error);
-      setError('Failed to load sustainability data');
+      setError(error.message || 'Failed to load sustainability data');
+      // Set default data to prevent blank screen
+      setSustainabilityData({
+        totalCO2Saved: 0,
+        totalWaterSaved: 0,
+        sustainabilityScore: 0,
+        badge: null,
+        rank: 0,
+        totalUsers: 0,
+        bookingCount: 0
+      });
     }
   };
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await fetch('/api/sustainability-advanced/leaderboard', {
+      setError(null);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/sustainability-advanced/leaderboard?limit=50', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch leaderboard');
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to fetch leaderboard');
       }
 
       const result = await response.json();
-      setLeaderboard(result.data);
+      
+      if (result.success && Array.isArray(result.data)) {
+        setLeaderboard(result.data);
+      } else if (result.success && result.data && Array.isArray(result.data.leaderboard)) {
+        setLeaderboard(result.data.leaderboard);
+      } else {
+        throw new Error('Invalid leaderboard format');
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
-      setError('Failed to load leaderboard');
+      setError(error.message || 'Failed to load leaderboard');
+      setLeaderboard([]);
       setLoading(false);
     }
   };

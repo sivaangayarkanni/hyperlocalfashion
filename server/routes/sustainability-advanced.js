@@ -2,25 +2,70 @@ const express = require('express');
 const router = express.Router();
 const SustainabilityService = require('../services/SustainabilityService');
 const { protect } = require('../middleware/auth');
+const { dbGet, dbAll } = require('../utils/db');
 
 /**
- * GET /api/sustainability/user/:userId
- * Get user sustainability metrics
+ * GET /api/sustainability-advanced/user/:userId
+ * Get user sustainability metrics with real-time data
  */
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const db = req.app.get('db');
-    const sustainabilityService = new SustainabilityService(db);
+    
+    // Get user data
+    const user = await dbGet(
+      db,
+      `SELECT id, name, totalCO2Saved, totalWaterSaved, sustainabilityScore FROM users WHERE id = ?`,
+      [userId]
+    );
 
-    const data = await sustainabilityService.getUserSustainability(userId);
-
-    if (!data) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'User not found' }
       });
     }
+
+    // Calculate real-time metrics from completed bookings
+    const bookings = await dbAll(
+      db,
+      `SELECT co2Saved, waterSaved FROM bookings WHERE userId = ? AND status = 'completed'`,
+      [userId]
+    );
+
+    const totalCO2Saved = bookings.reduce((sum, b) => sum + (b.co2Saved || 0), 0);
+    const totalWaterSaved = bookings.reduce((sum, b) => sum + (b.waterSaved || 0), 0);
+    const sustainabilityScore = totalCO2Saved + (totalWaterSaved / 10);
+
+    // Determine badge
+    let badge = null;
+    if (sustainabilityScore >= 1000) badge = 'gold';
+    else if (sustainabilityScore >= 500) badge = 'silver';
+    else if (sustainabilityScore >= 100) badge = 'bronze';
+
+    // Get user rank
+    const allUsers = await dbAll(
+      db,
+      `SELECT id, (SELECT SUM(co2Saved) FROM bookings WHERE userId = users.id AND status = 'completed') as totalCO2,
+              (SELECT SUM(waterSaved) FROM bookings WHERE userId = users.id AND status = 'completed') as totalWater
+       FROM users
+       ORDER BY (COALESCE(totalCO2, 0) + COALESCE(totalWater, 0)/10) DESC`,
+      []
+    );
+
+    const rank = allUsers.findIndex(u => u.id === parseInt(userId)) + 1;
+
+    const data = {
+      totalCO2Saved,
+      totalWaterSaved,
+      sustainabilityScore,
+      badge,
+      rank,
+      totalUsers: allUsers.length,
+      bookingCount: bookings.length,
+      updatedAt: new Date().toISOString()
+    };
 
     res.json({
       success: true,
@@ -36,23 +81,52 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 /**
- * GET /api/sustainability/leaderboard
- * Get sustainability leaderboard
+ * GET /api/sustainability-advanced/leaderboard
+ * Get sustainability leaderboard with real-time data
  */
 router.get('/leaderboard', async (req, res) => {
   try {
     const { limit = 50 } = req.query;
     const db = req.app.get('db');
-    const sustainabilityService = new SustainabilityService(db);
 
-    const leaderboard = await sustainabilityService.getLeaderboard(parseInt(limit));
+    // Get all users with their sustainability metrics
+    const users = await dbAll(
+      db,
+      `SELECT u.id, u.name, u.avatar,
+              (SELECT SUM(co2Saved) FROM bookings WHERE userId = u.id AND status = 'completed') as totalCO2,
+              (SELECT SUM(waterSaved) FROM bookings WHERE userId = u.id AND status = 'completed') as totalWater
+       FROM users u
+       ORDER BY (COALESCE(totalCO2, 0) + COALESCE(totalWater, 0)/10) DESC
+       LIMIT ?`,
+      [parseInt(limit)]
+    );
+
+    const leaderboard = users.map((user, index) => {
+      const totalCO2 = user.totalCO2 || 0;
+      const totalWater = user.totalWater || 0;
+      const score = totalCO2 + (totalWater / 10);
+      
+      let badge = null;
+      if (score >= 1000) badge = 'gold';
+      else if (score >= 500) badge = 'silver';
+      else if (score >= 100) badge = 'bronze';
+
+      return {
+        userId: user.id,
+        name: user.name,
+        avatar: user.avatar,
+        sustainabilityScore: score,
+        badge,
+        rank: index + 1,
+        totalCO2Saved: totalCO2,
+        totalWaterSaved: totalWater
+      };
+    });
 
     res.json({
       success: true,
-      data: {
-        leaderboard,
-        updatedAt: new Date().toISOString()
-      }
+      data: leaderboard,
+      updatedAt: new Date().toISOString()
     });
   } catch (error) {
     console.error('Error getting leaderboard:', error);
