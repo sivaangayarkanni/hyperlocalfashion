@@ -1,76 +1,95 @@
 #!/bin/bash
 
-# ReWear Platform Deployment Script
+# ReWear Platform - Deployment Script
+# This script automates the deployment process
 
-echo "🚀 Starting ReWear Platform Deployment..."
+set -e
 
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is not installed. Please install Node.js first."
+echo "🚀 ReWear Platform - Deployment Script"
+echo "========================================"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Check prerequisites
+echo -e "${YELLOW}Checking prerequisites...${NC}"
+
+if ! command -v docker &> /dev/null; then
+    echo -e "${RED}❌ Docker is not installed${NC}"
     exit 1
 fi
 
-# Check if npm is installed
-if ! command -v npm &> /dev/null; then
-    echo "❌ npm is not installed. Please install npm first."
+if ! command -v docker-compose &> /dev/null; then
+    echo -e "${RED}❌ Docker Compose is not installed${NC}"
     exit 1
 fi
 
-echo "✅ Node.js and npm are installed"
+echo -e "${GREEN}✅ Docker and Docker Compose found${NC}"
 
-# Install dependencies
-echo "📦 Installing dependencies..."
-npm run install-all
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to install dependencies"
-    exit 1
-fi
-
-echo "✅ Dependencies installed successfully"
-
-# Run tests
-echo "🧪 Running tests..."
-npm test
-
-if [ $? -ne 0 ]; then
-    echo "⚠️  Some tests failed, but continuing deployment..."
-fi
-
-# Build client
-echo "🏗️  Building client application..."
-npm run build
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to build client application"
-    exit 1
-fi
-
-echo "✅ Client application built successfully"
-
-# Check if .env file exists
+# Check if .env exists
 if [ ! -f .env ]; then
-    echo "⚠️  .env file not found. Creating from .env.example..."
+    echo -e "${YELLOW}Creating .env from .env.example...${NC}"
     cp .env.example .env
-    echo "📝 Please update .env file with your configuration"
+    echo -e "${YELLOW}⚠️  Please edit .env with your configuration${NC}"
+    exit 1
 fi
 
-# Create uploads directory if it doesn't exist
-mkdir -p uploads
+echo -e "${GREEN}✅ .env file found${NC}"
 
-echo "🎉 Deployment completed successfully!"
+# Build and start
+echo -e "${YELLOW}Building Docker image...${NC}"
+docker-compose build
+
+echo -e "${YELLOW}Starting services...${NC}"
+docker-compose up -d
+
+# Wait for services to be ready
+echo -e "${YELLOW}Waiting for services to be ready...${NC}"
+sleep 10
+
+# Check health
+echo -e "${YELLOW}Checking health endpoints...${NC}"
+
+# Check API health
+if curl -s http://localhost:5000/health > /dev/null; then
+    echo -e "${GREEN}✅ API is healthy${NC}"
+else
+    echo -e "${RED}❌ API health check failed${NC}"
+    docker-compose logs rewear-app
+    exit 1
+fi
+
+# Check database
+if curl -s http://localhost:5000/api/health/db > /dev/null; then
+    echo -e "${GREEN}✅ Database is healthy${NC}"
+else
+    echo -e "${RED}❌ Database health check failed${NC}"
+    docker-compose logs rewear-app
+    exit 1
+fi
+
+# Check AI services
+if curl -s http://localhost:5000/api/health/ai > /dev/null; then
+    echo -e "${GREEN}✅ AI services configured${NC}"
+else
+    echo -e "${YELLOW}⚠️  AI services not fully configured${NC}"
+fi
+
 echo ""
-echo "📋 Next steps:"
-echo "1. Update .env file with your configuration"
-echo "2. Start the development server: npm run dev"
-echo "3. Open http://localhost:3000 in your browser"
+echo -e "${GREEN}✅ Deployment successful!${NC}"
 echo ""
-echo "🌟 Advanced Features Available:"
-echo "   • AI Damage Detection"
-echo "   • Real-time Delivery Tracking"
-echo "   • Trust Score System"
-echo "   • Sustainability Gamification"
-echo "   • Smart Pricing Engine"
-echo "   • Escrow Payment System"
+echo "📊 Application URLs:"
+echo "  Frontend: http://localhost:3000"
+echo "  Backend:  http://localhost:5000"
+echo "  API Docs: http://localhost:5000/api/health"
 echo ""
-echo "Happy coding! 🎯"
+echo "📋 Useful commands:"
+echo "  View logs:     docker-compose logs -f rewear-app"
+echo "  Stop services: docker-compose down"
+echo "  Restart:       docker-compose restart"
+echo "  Status:        docker-compose ps"
+echo ""
+echo "🎉 ReWear Platform is ready to use!"
