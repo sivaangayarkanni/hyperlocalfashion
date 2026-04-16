@@ -20,7 +20,7 @@ import TailorProfile from './pages/TailorProfile';
 import TailorOwnProfile from './pages/TailorOwnProfile';
 import NearbyTailors from './pages/NearbyTailors';
 import FeaturesDemo from './pages/FeaturesDemo';
-import AIChatbot from './components/AIChatbot';
+import AdvancedAIChatbot from './components/AdvancedAIChatbot';
 
 function App() {
   return (
@@ -75,7 +75,7 @@ function App() {
           </Routes>
           
           <ToastContainer position="top-right" autoClose={3000} />
-          <AIChatbot />
+          <AdvancedAIChatbot />
         </div>
       </Router>
     </AuthProvider>

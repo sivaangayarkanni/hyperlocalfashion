@@ -266,6 +266,7 @@ app.use('/api/logistics', require('./routes/logistics'));
 // Advanced feature routes
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/ai', require('./routes/ai-chat'));
+app.use('/api/ai', require('./routes/ai-advanced'));
 app.use('/api/logistics-advanced', require('./routes/logistics-advanced'));
 app.use('/api/sustainability-advanced', require('./routes/sustainability-advanced'));
 app.use('/api/fraud', require('./routes/fraud'));
