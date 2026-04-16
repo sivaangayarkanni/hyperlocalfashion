@@ -1,0 +1,314 @@
+/* ============================================
+   TAILOR NOT FOUND PAGE
+   ============================================ */
+
+.tailor-not-found {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fafafa 0%, #f5e6d3 100%);
+  padding: 40px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated Trees */
+.tree-container {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+}
+
+.tree-container.tree-left-404 {
+  left: 5%;
+  width: 150px;
+  height: 300px;
+}
+
+.tree-container.tree-right-404 {
+  right: 5%;
+  width: 150px;
+  height: 300px;
+}
+
+.tree {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Tree Roots - Flowing Animation */
+.tree-roots {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 120px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150"><defs><style>.root-line{stroke:%232d5016;stroke-width:3;fill:none;stroke-linecap:round;}</style></defs><path class="root-line" d="M60,0 Q50,30 40,60 Q30,90 20,120"/><path class="root-line" d="M60,0 Q70,30 80,60 Q90,90 100,120"/><path class="root-line" d="M60,0 Q60,40 50,80 Q40,110 35,150"/><path class="root-line" d="M60,0 Q60,40 70,80 Q80,110 85,150"/><path class="root-line" d="M60,0 Q55,50 45,100 Q35,130 30,150"/><path class="root-line" d="M60,0 Q65,50 75,100 Q85,130 90,150"/></svg>') no-repeat center;
+  background-size: contain;
+  animation: rootsFlow 4s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes rootsFlow {
+  0%, 100% {
+    transform: translateX(-50%) scaleY(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(-50%) scaleY(1.1);
+    opacity: 1;
+  }
+}
+
+/* Tree Trunk */
+.tree-trunk {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 25px;
+  height: 100px;
+  background: linear-gradient(90deg, #5d4037 0%, #8d6e63 50%, #5d4037 100%);
+  border-radius: 12px;
+  box-shadow: inset -2px 0 5px rgba(0, 0, 0, 0.3);
+  animation: trunkSway 3s ease-in-out infinite;
+}
+
+@keyframes trunkSway {
+  0%, 100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(1deg);
+  }
+}
+
+/* Tree Foliage */
+.tree-foliage {
+  position: absolute;
+  bottom: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 110px;
+  background: radial-gradient(circle at 30% 30%, #4caf50 0%, #2d5016 70%);
+  border-radius: 50%;
+  box-shadow: 
+    -25px -15px 0 -15px #66bb6a,
+    25px -15px 0 -15px #66bb6a,
+    -15px 15px 0 -15px #388e3c,
+    15px 15px 0 -15px #388e3c,
+    0 -30px 0 -25px #81c784,
+    inset -10px -10px 20px rgba(0, 0, 0, 0.2);
+  animation: foliageSway 3.5s ease-in-out infinite;
+}
+
+@keyframes foliageSway {
+  0%, 100% {
+    transform: translateX(-50%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateX(-50%) rotate(-2deg) scale(1.02);
+  }
+  50% {
+    transform: translateX(-50%) rotate(0deg) scale(1);
+  }
+  75% {
+    transform: translateX(-50%) rotate(2deg) scale(1.02);
+  }
+}
+
+/* Floating leaves effect */
+.tree-foliage::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 70% 70%, rgba(76, 175, 80, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: leafFloat 4s ease-in-out infinite;
+}
+
+@keyframes leafFloat {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateY(-10px);
+  }
+}
+
+/* Not Found Content */
+.not-found-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  background: white;
+  padding: 60px 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.not-found-icon {
+  font-size: 100px;
+  margin-bottom: 20px;
+  display: block;
+  animation: float 3s ease-in-out infinite;
+}
+
+.not-found-content h1 {
+  color: var(--primary-dark);
+  font-size: 42px;
+  margin-bottom: 15px;
+  font-family: var(--font-display);
+}
+
+.not-found-subtitle {
+  color: var(--neutral-600);
+  font-size: 18px;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.not-found-suggestions {
+  background: rgba(45, 80, 22, 0.05);
+  padding: 30px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.not-found-suggestions h3 {
+  color: var(--primary-dark);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.not-found-suggestions ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.not-found-suggestions li {
+  margin: 0;
+}
+
+.suggestion-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 10px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.suggestion-link:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateX(5px);
+}
+
+.not-found-message {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(243, 156, 18, 0.1) 100%);
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid var(--accent);
+}
+
+.not-found-message p {
+  color: var(--neutral-700);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.not-found-message strong {
+  color: var(--accent);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tailor-not-found {
+    padding: 20px;
+  }
+
+  .not-found-content {
+    padding: 40px 25px;
+  }
+
+  .not-found-icon {
+    font-size: 70px;
+  }
+
+  .not-found-content h1 {
+    font-size: 28px;
+  }
+
+  .not-found-subtitle {
+    font-size: 16px;
+  }
+
+  .tree-container.tree-left-404,
+  .tree-container.tree-right-404 {
+    width: 100px;
+    height: 200px;
+  }
+
+  .tree-trunk {
+    width: 20px;
+    height: 80px;
+    bottom: 100px;
+  }
+
+  .tree-foliage {
+    width: 90px;
+    height: 90px;
+    bottom: 130px;
+  }
+}
+
+@media (max-width: 480px) {
+  .not-found-content {
+    padding: 30px 20px;
+  }
+
+  .not-found-icon {
+    font-size: 60px;
+  }
+
+  .not-found-content h1 {
+    font-size: 24px;
+  }
+
+  .not-found-subtitle {
+    font-size: 14px;
+  }
+
+  .not-found-suggestions {
+    padding: 20px;
+  }
+
+  .suggestion-link {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+
+  .tree-container.tree-left-404,
+  .tree-container.tree-right-404 {
+    display: none;
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "rewear-ai-assistant": {
+      "command": "node",
+      "args": ["server/mcp/ai-assistant-server.js"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+        "GOOGLE_API_KEY": "${GOOGLE_API_KEY}",
+        "COHERE_API_KEY": "${COHERE_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "analyze_garment",
+        "get_repair_recommendation",
+        "calculate_sustainability_impact",
+        "generate_response"
+      ]
+    },
+    "rewear-analytics": {
+      "command": "node",
+      "args": ["server/mcp/analytics-server.js"],
+      "env": {
+        "DATABASE_PATH": "./rewear.db"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "get_user_stats",
+        "get_platform_metrics",
+        "generate_report"
+      ]
+    },
+    "rewear-notifications": {
+      "command": "node",
+      "args": ["server/mcp/notifications-server.js"],
+      "env": {
+        "TWILIO_ACCOUNT_SID": "${TWILIO_ACCOUNT_SID}",
+        "TWILIO_AUTH_TOKEN": "${TWILIO_AUTH_TOKEN}",
+        "SENDGRID_API_KEY": "${SENDGRID_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "send_sms",
+        "send_email",
+        "send_push_notification"
+      ]
+    },
+    "rewear-api-key-manager": {
+      "command": "node",
+      "args": ["server/mcp/api-key-manager-server.js"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "get_api_key_info",
+        "list_all_providers",
+        "validate_api_key_format",
+        "generate_env_template",
+        "get_setup_instructions"
+      ]
+    }
+  }
+}
